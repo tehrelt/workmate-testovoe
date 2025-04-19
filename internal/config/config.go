@@ -18,11 +18,12 @@ const (
 )
 
 type Config struct {
-	Env     Env          `env:"ENV" env-default:"local"`
-	Name    string       `env:"APP_NAME" env-default:"workmate-testovoe"`
-	Version string       `env:"VERSION" env-default:"v0.1.0"`
-	Http    ServerConfig `env-prefix:"HTTP_" env-default:"localhost:8080"`
-	PG      Database     `env-prefix:"PG_" env-default:"postgresql:localhost:5432:postgres:postgres:workmate"`
+	Env            Env          `env:"ENV" env-default:"local"`
+	Name           string       `env:"APP_NAME" env-default:"workmate-testovoe"`
+	Version        string       `env:"VERSION" env-default:"v0.1.0"`
+	JaegerEndpoint string       `env:"JAEGER_ENDPOINT" env-default:"localhost:6831"`
+	Http           ServerConfig `env-prefix:"HTTP_" env-default:"localhost:8080"`
+	PG             Database     `env-prefix:"PG_" env-default:"postgresql:localhost:5432:postgres:postgres:workmate"`
 }
 
 type ServerConfig struct {

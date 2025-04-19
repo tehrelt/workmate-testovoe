@@ -1,0 +1,9 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: workmate-jaeger
+    ports:
+      - "14268:14268"
+      - "14269:14269"
+      - "16686:16686"
+      - "4317:4317"

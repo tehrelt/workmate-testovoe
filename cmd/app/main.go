@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/tehrelt/workmate-testovoe/internal/config"
+	"github.com/tehrelt/workmate-testovoe/internal/lib/tracer"
 	"github.com/tehrelt/workmate-testovoe/internal/transport/http"
 	"github.com/tehrelt/workmate-testovoe/pkg/sl"
 )
@@ -31,8 +32,8 @@ func main() {
 	}
 
 	ctx := context.Background()
-
 	cfg := config.New()
+	tracer.SetupTracer(ctx, cfg.JaegerEndpoint, cfg.Name)
 	server := http.New(cfg)
 
 	if err := server.Run(ctx); err != nil {

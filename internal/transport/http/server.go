@@ -33,6 +33,7 @@ func New(cfg *config.Config) *Server {
 
 func (s *Server) setup() *Server {
 
+	s.router.Use(middlewares.Tracing(s.cfg.Name))
 	s.router.Use(middlewares.Logging)
 
 	s.router.POST("/", handlers.CreateTask())
