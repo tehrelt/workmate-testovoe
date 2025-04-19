@@ -40,7 +40,7 @@ type Database struct {
 	Host     string `env:"HOST" env-default:"localhost"`
 	Port     int    `env:"PORT" env-default:"5432"`
 	User     string `env:"USER" env-default:"postgres"`
-	Password string `env:"PASSWORD" env-default:"password"`
+	Password string `env:"PASS" env-default:"password"`
 	Name     string `env:"NAME" env-default:"workmate"`
 }
 

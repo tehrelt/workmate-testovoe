@@ -7,3 +7,21 @@ services:
       - "14269:14269"
       - "16686:16686"
       - "4317:4317"
+
+  pg:
+    image: postgres:17.4-alpine3.21
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${PG_NAME}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASS}
+    volumes:
+      - workmate-local-pg-data:/var/lib/postgresql/data
+    ports:
+      - ${PG_PORT}:5432
+
+volumes:
+  workmate-local-pg-data:
+    name: workmate-local-pg
