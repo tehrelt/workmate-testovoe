@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log/slog"
 	"os"
@@ -29,11 +30,12 @@ func main() {
 		}
 	}
 
-	cfg := config.New()
+	ctx := context.Background()
 
+	cfg := config.New()
 	server := http.New(cfg)
 
-	if err := server.Run(); err != nil {
+	if err := server.Run(ctx); err != nil {
 		panic(err)
 	}
 }

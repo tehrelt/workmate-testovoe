@@ -14,8 +14,8 @@ func Logging(next echo.HandlerFunc) echo.HandlerFunc {
 			duration := time.Since(start)
 			slog.Info(
 				"request",
-				slog.String("path", c.Path()),
 				slog.String("method", c.Request().Method),
+				slog.String("path", c.Path()),
 				slog.Int("status", c.Response().Status),
 				slog.Int("size", int(c.Response().Size)),
 				slog.Duration("latency", duration),
