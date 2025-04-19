@@ -12,6 +12,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/tehrelt/workmate-testovoe/internal/config"
+	"github.com/tehrelt/workmate-testovoe/internal/services/taskservice"
 	"github.com/tehrelt/workmate-testovoe/internal/transport/http/handlers"
 	"github.com/tehrelt/workmate-testovoe/internal/transport/http/middlewares"
 	"github.com/tehrelt/workmate-testovoe/pkg/sl"
@@ -20,12 +21,15 @@ import (
 type Server struct {
 	router *echo.Echo
 	cfg    *config.Config
+
+	taskService *taskservice.TaskService
 }
 
-func New(cfg *config.Config) *Server {
+func New(cfg *config.Config, ts *taskservice.TaskService) *Server {
 	s := &Server{
-		router: echo.New(),
-		cfg:    cfg,
+		router:      echo.New(),
+		cfg:         cfg,
+		taskService: ts,
 	}
 
 	return s.setup()
@@ -36,7 +40,7 @@ func (s *Server) setup() *Server {
 	s.router.Use(middlewares.Tracing(s.cfg.Name))
 	s.router.Use(middlewares.Logging)
 
-	s.router.POST("/", handlers.CreateTask())
+	s.router.POST("/", handlers.CreateTask(s.taskService))
 
 	return s
 }

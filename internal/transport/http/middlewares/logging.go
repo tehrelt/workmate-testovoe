@@ -5,13 +5,17 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/tehrelt/workmate-testovoe/pkg/sl"
 )
 
 func Logging(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c echo.Context) (err error) {
 		start := time.Now()
 		defer func() {
 			duration := time.Since(start)
+			if err != nil {
+				slog.Error("request failed", sl.Err(err))
+			}
 			slog.Info(
 				"request",
 				slog.String("method", c.Request().Method),
@@ -22,6 +26,7 @@ func Logging(next echo.HandlerFunc) echo.HandlerFunc {
 			)
 		}()
 
-		return next(c)
+		err = next(c)
+		return err
 	}
 }

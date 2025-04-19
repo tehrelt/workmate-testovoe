@@ -40,6 +40,7 @@ func New(taskSaver TaskSaver, taskProvider TaskProvider, taskProcessor TaskProce
 }
 
 func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (*models.Task, error) {
+	slog.Debug("saving task", slog.Any("in", in))
 	task, err := ts.taskSaver.Save(ctx, in)
 	if err != nil {
 		slog.Error("failed to save task", sl.Err(err))
