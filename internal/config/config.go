@@ -18,10 +18,20 @@ const (
 )
 
 type Config struct {
-	Env     Env      `env:"ENV" env-default:"local"`
-	Name    string   `env:"APP_NAME" env-default:"workmate-testovoe"`
-	Version string   `env:"VERSION" env-default:"v0.1.0"`
-	PG      Database `env-prefix:"PG_" env-default:"localhost:5432:postgres:password:workmate"`
+	Env     Env          `env:"ENV" env-default:"local"`
+	Name    string       `env:"APP_NAME" env-default:"workmate-testovoe"`
+	Version string       `env:"VERSION" env-default:"v0.1.0"`
+	Http    ServerConfig `env-prefix:"HTTP_" env-default:"localhost:8080"`
+	PG      Database     `env-prefix:"PG_" env-default:"postgresql:localhost:5432:postgres:postgres:workmate"`
+}
+
+type ServerConfig struct {
+	Host string `env:"HOST"`
+	Port int    `env:"PORT"`
+}
+
+func (s *ServerConfig) Address() string {
+	return fmt.Sprintf("%s:%d", s.Host, s.Port)
 }
 
 type Database struct {
