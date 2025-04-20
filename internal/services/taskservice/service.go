@@ -17,7 +17,8 @@ type TaskSaver interface {
 //go:generate go run github.com/vektra/mockery/v2 --name=TaskProvider
 type TaskProvider interface {
 	Task(ctx context.Context, id uuid.UUID) (*models.Task, error)
-	Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan models.Task, error)
+	Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan *models.Task, error)
+	Total(ctx context.Context) (uint64, error)
 }
 
 //go:generate go run github.com/vektra/mockery/v2 --name=TaskProcessor
@@ -56,14 +57,20 @@ func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (*
 	return task, nil
 }
 
-func (ts *TaskService) Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan models.Task, error) {
+func (ts *TaskService) Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan *models.Task, uint64, error) {
 	out, err := ts.taskProvider.Tasks(ctx, filter)
 	if err != nil {
 		slog.Error("failed to get tasks", sl.Err(err))
-		return nil, err
+		return nil, 0, err
 	}
 
-	return out, nil
+	total, err := ts.taskProvider.Total(ctx)
+	if err != nil {
+		slog.Error("failed to count tasks", sl.Err(err))
+		return nil, 0, err
+	}
+
+	return out, total, nil
 }
 
 func (ts *TaskService) Task(ctx context.Context, id uuid.UUID) (*models.Task, error) {

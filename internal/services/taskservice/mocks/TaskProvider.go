@@ -47,23 +47,23 @@ func (_m *TaskProvider) Task(ctx context.Context, id uuid.UUID) (*models.Task, e
 }
 
 // Tasks provides a mock function with given fields: ctx, filter
-func (_m *TaskProvider) Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan models.Task, error) {
+func (_m *TaskProvider) Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan *models.Task, error) {
 	ret := _m.Called(ctx, filter)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Tasks")
 	}
 
-	var r0 <-chan models.Task
+	var r0 <-chan *models.Task
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *models.TaskFilter) (<-chan models.Task, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *models.TaskFilter) (<-chan *models.Task, error)); ok {
 		return rf(ctx, filter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, *models.TaskFilter) <-chan models.Task); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *models.TaskFilter) <-chan *models.Task); ok {
 		r0 = rf(ctx, filter)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(<-chan models.Task)
+			r0 = ret.Get(0).(<-chan *models.Task)
 		}
 	}
 

@@ -61,6 +61,7 @@ func (s *Server) setup() *Server {
 	s.router.Use(middlewares.Logging)
 
 	s.router.POST("/", handlers.CreateTask(s.taskService))
+	s.router.GET("/", handlers.ListTasks(s.taskService))
 	s.router.GET("/:id", handlers.GetTask(s.taskService))
 
 	return s

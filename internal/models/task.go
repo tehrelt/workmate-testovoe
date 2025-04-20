@@ -30,6 +30,27 @@ type CreateTask struct {
 	Title string
 }
 
+type Range struct {
+	From  uint64
+	Limit uint64
+}
+
 type TaskFilter struct {
-	Status *TaskStatus
+	Range
+	Status TaskStatus
+}
+
+func (tf *TaskFilter) SetStatus(status TaskStatus) *TaskFilter {
+	tf.Status = status
+	return tf
+}
+
+func (tf *TaskFilter) SetFrom(from uint64) *TaskFilter {
+	tf.Range.From = from
+	return tf
+}
+
+func (tf *TaskFilter) SetLimit(limit uint64) *TaskFilter {
+	tf.Range.Limit = limit
+	return tf
 }
