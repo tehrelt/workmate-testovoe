@@ -2,12 +2,8 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-playground/locales/en"
@@ -69,29 +65,26 @@ func (s *Server) setup() *Server {
 
 func (s *Server) Run(ctx context.Context) error {
 
-	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	defer func() {
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 
-	go func() {
-		if err := s.router.Start(s.cfg.Http.Address()); err != nil {
-			if err == http.ErrServerClosed {
-				return
-			}
-
-			slog.Error("failed to start http server", sl.Err(err))
-			stop()
+		defer cancel()
+		if err := s.router.Shutdown(ctx); err != nil {
+			slog.Error("failed to shutdown HTTP server", sl.Err(err))
+			return
 		}
+
+		slog.Info("server shutdown")
 	}()
 
-	<-ctx.Done()
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	if err := s.router.Start(s.cfg.Http.Address()); err != nil {
+		if err == http.ErrServerClosed {
+			return nil
+		}
 
-	defer cancel()
-	if err := s.router.Shutdown(ctx); err != nil {
-		return fmt.Errorf("failed to shutdown HTTP server: %w", err)
+		slog.Error("failed to start http server", sl.Err(err))
+		return err
 	}
-
-	slog.Info("server shutdown")
 
 	return nil
 }

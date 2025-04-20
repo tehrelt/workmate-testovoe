@@ -12,6 +12,7 @@ import (
 //go:generate go run github.com/vektra/mockery/v2 --name=TaskSaver
 type TaskSaver interface {
 	Save(ctx context.Context, task *models.CreateTask) (*models.Task, error)
+	Update(ctx context.Context, task *models.UpdateTask) error
 }
 
 //go:generate go run github.com/vektra/mockery/v2 --name=TaskProvider
@@ -19,6 +20,10 @@ type TaskProvider interface {
 	Task(ctx context.Context, id uuid.UUID) (*models.Task, error)
 	Tasks(ctx context.Context, filter *models.TaskFilter) (<-chan *models.Task, error)
 	Total(ctx context.Context) (uint64, error)
+}
+
+type EventSaver interface {
+	Save(ctx context.Context, eventId uuid.UUID) error
 }
 
 //go:generate go run github.com/vektra/mockery/v2 --name=TaskProcessor
@@ -30,13 +35,21 @@ type TaskService struct {
 	taskSaver     TaskSaver
 	taskProvider  TaskProvider
 	taskProcessor TaskProcessor
+
+	eventSaver EventSaver
 }
 
-func New(taskSaver TaskSaver, taskProvider TaskProvider, taskProcessor TaskProcessor) *TaskService {
+func New(
+	taskSaver TaskSaver,
+	taskProvider TaskProvider,
+	taskProcessor TaskProcessor,
+	eventSaver EventSaver,
+) *TaskService {
 	return &TaskService{
 		taskSaver:     taskSaver,
 		taskProvider:  taskProvider,
 		taskProcessor: taskProcessor,
+		eventSaver:    eventSaver,
 	}
 }
 
@@ -81,4 +94,26 @@ func (ts *TaskService) Task(ctx context.Context, id uuid.UUID) (*models.Task, er
 	}
 
 	return task, nil
+}
+
+func (ts *TaskService) UpdateTask(ctx context.Context, in *models.UpdateTask) error {
+
+	// TODO transaction manager
+	slog.Info("saving event", slog.String("eventId", in.EventId.String()))
+	err := ts.eventSaver.Save(ctx, in.EventId)
+	if err != nil {
+		return err
+	}
+
+	slog.Info(
+		"updating task status",
+		slog.String("taskId", in.Id.String()),
+		slog.String("newStatus", string(in.NewStatus)),
+	)
+	if err := ts.taskSaver.Update(ctx, in); err != nil {
+		slog.Error("failed to update task", sl.Err(err))
+		return err
+	}
+
+	return nil
 }

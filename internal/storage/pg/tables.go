@@ -1,5 +1,6 @@
 package pg
 
 const (
-	TaskTable = "tasks"
+	TaskTable  = "tasks"
+	EventTable = "events"
 )

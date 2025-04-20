@@ -15,7 +15,7 @@ func (ts TaskStatus) String() string {
 const (
 	StatusError     TaskStatus = "error"
 	StatusPending   TaskStatus = "pending"
-	StatusCompleted TaskStatus = "completed"
+	StatusCompleted TaskStatus = "done"
 )
 
 type Task struct {
@@ -28,6 +28,12 @@ type Task struct {
 
 type CreateTask struct {
 	Title string
+}
+
+type UpdateTask struct {
+	Id        uuid.UUID
+	EventId   uuid.UUID
+	NewStatus TaskStatus
 }
 
 type Range struct {

@@ -24,6 +24,11 @@ type Config struct {
 	JaegerEndpoint string       `env:"JAEGER_ENDPOINT" env-default:"localhost:6831"`
 	Http           ServerConfig `env-prefix:"HTTP_" env-default:"localhost:8080"`
 	PG             Database     `env-prefix:"PG_" env-default:"postgresql:localhost:5432:postgres:postgres:workmate"`
+	Amqp           AmqpConfig   `env-prefix:"AMQP_" env-default:"localhost:5672:guest:guest:/"`
+	Queues         struct {
+		NewTasks       QueueConfig `env-prefix:"NEW_TASKS_"`
+		ProcessedTasks QueueConfig `env-prefix:"PROCESSED_TASKS_"`
+	} `env-prefix:"QUEUE_"`
 }
 
 type ServerConfig struct {
@@ -33,6 +38,23 @@ type ServerConfig struct {
 
 func (s *ServerConfig) Address() string {
 	return fmt.Sprintf("%s:%d", s.Host, s.Port)
+}
+
+type AmqpConfig struct {
+	Host     string `env:"HOST" env-default:"localhost"`
+	Port     int    `env:"PORT" env-default:"5672"`
+	User     string `env:"USER" env-default:"guest"`
+	Password string `env:"PASS" env-default:"guest"`
+	Vhost    string `env:"VHOST" env-default:"/"`
+}
+
+func (a *AmqpConfig) ConnectionString() string {
+	return fmt.Sprintf("amqp://%s:%s@%s:%d/", a.User, a.Password, a.Host, a.Port)
+}
+
+type QueueConfig struct {
+	Exchange   string `env:"EXCHANGE" env-default:"workmate"`
+	RoutingKey string `env:"ROUTING_KEY" env-default:"workmate"`
 }
 
 type Database struct {

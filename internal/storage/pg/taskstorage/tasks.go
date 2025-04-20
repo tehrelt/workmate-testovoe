@@ -27,6 +27,7 @@ func (ts *TaskStorage) Tasks(ctx context.Context, filter *models.TaskFilter) (<-
 	builder := sq.
 		Select("id", "title", "status", "created_at", "updated_at").
 		From(pg.TaskTable).
+		OrderBy("created_at ASC").
 		PlaceholderFormat(sq.Dollar)
 
 	if filter != nil {

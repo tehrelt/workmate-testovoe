@@ -22,6 +22,16 @@ services:
     ports:
       - ${PG_PORT}:5432
 
+  rmq:
+    container_name: workmate-rabbitmq
+    image: rabbitmq:3-management
+    volumes:
+      - workmate-rmq-data:/data
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
 volumes:
   workmate-local-pg-data:
     name: workmate-local-pg
+  workmate-rmq-data:

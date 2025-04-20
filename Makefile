@@ -1,4 +1,3 @@
-
 ifneq (,$(wildcard ./.env))
     include .env
     export
@@ -13,8 +12,12 @@ run: gen
 gen:
 	wire ./internal/app
 
+clean:
+	rm -rf ./bin
+	rm ./internal/app/wire_gen.go
+
 migrate.up:
 	migrate -path ./migrations -database 'postgres://$(PG_USER):$(PG_PASS)@$(PG_HOST):$(PG_PORT)/$(PG_NAME)?sslmode=disable' up
 
 migrate.down:
-	migrate -path ./migrations -database 'postgres://$(PG_USER):$(PG_PASS)@$(PG_HOST):$(PG_PORT)/$(PG_NAME)?sslmode=disable' down
+	migrate -path ./migrations -database 'postgres://$(PG_USER):$(PG_PASS)@$(PG_HOST):$(PG_PORT)/$(PG_NAME)?sslmode=disable' down 1

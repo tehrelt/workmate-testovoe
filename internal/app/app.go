@@ -2,26 +2,61 @@ package app
 
 import (
 	"context"
+	"log/slog"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/tehrelt/workmate-testovoe/internal/config"
+	"github.com/tehrelt/workmate-testovoe/internal/transport/amqp"
 	"github.com/tehrelt/workmate-testovoe/internal/transport/http"
+	"github.com/tehrelt/workmate-testovoe/pkg/sl"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type App struct {
-	cfg    *config.Config
-	server *http.Server
-	tracer trace.Tracer
+type Server interface {
+	Run(context.Context) error
 }
 
-func build(cfg *config.Config, server *http.Server, tracer trace.Tracer) *App {
+type App struct {
+	cfg      *config.Config
+	server   *http.Server
+	consumer *amqp.Consumer
+	tracer   trace.Tracer
+}
+
+func build(cfg *config.Config, server *http.Server, tracer trace.Tracer, consumer *amqp.Consumer) *App {
 	return &App{
-		cfg:    cfg,
-		server: server,
-		tracer: tracer,
+		cfg:      cfg,
+		server:   server,
+		tracer:   tracer,
+		consumer: consumer,
 	}
 }
 
 func (a *App) Run(ctx context.Context) error {
-	return a.server.Run(ctx)
+
+	servers := []Server{a.server, a.consumer}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(servers))
+
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	for _, server := range servers {
+		go func() {
+			defer wg.Done()
+			if err := server.Run(ctx); err != nil {
+				slog.Error("failed to run server", sl.Err(err))
+				stop()
+			}
+		}()
+	}
+
+	<-ctx.Done()
+	wg.Wait()
+
+	return nil
 }
