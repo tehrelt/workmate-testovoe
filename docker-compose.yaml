@@ -7,7 +7,6 @@ services:
       - "14269:14269"
       - "16686:16686"
       - "4317:4317"
-
   rmq:
     container_name: workmate-rabbitmq
     image: rabbitmq:3-management
@@ -17,5 +16,86 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  processor:
+    container_name: workmate-processor
+    build:
+      context: ./task-processor
+    env_file:
+      - .env
+    environment:
+      WAIT_HOSTS: processor-pg:5432
+      PG_NAME: ${PROCESSOR_PG_NAME}
+      PG_USER: ${PROCESSOR_PG_USER}
+      PG_PASS: ${PROCESSOR_PG_PASS}
+      PG_HOST: processor-pg
+      PG_PORT: 5432
+
+      AMQP_USER: ${AMQP_USER}
+      AMQP_PASS: ${AMQP_PASS}
+      AMQP_HOST: rmq
+      AMQP_PORT: 5672
+
+      JAEGER_ENDPOINT: http://jaeger:4317
+
+      HTTP_PORT: 80
+    depends_on:
+      - rmq
+      - processor-pg
+  processor-pg:
+    image: postgres:17.4-alpine3.21
+    container_name: workmate-processor-pg
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${PROCESSOR_PG_NAME}
+      POSTGRES_USER: ${PROCESSOR_PG_USER}
+      POSTGRES_PASSWORD: ${PROCESSOR_PG_PASS}
+    volumes:
+      - workmate-producer-local-pg-data:/var/lib/postgresql/data
+
+  producer:
+    container_name: workmate-producer
+    build:
+      context: ./task-producer
+    env_file:
+      - .env
+
+    environment:
+      WAIT_HOSTS: producer-pg:5432
+      PG_NAME: ${PRODUCER_PG_NAME}
+      PG_USER: ${PRODUCER_PG_USER}
+      PG_PASS: ${PRODUCER_PG_PASS}
+      PG_HOST: producer-pg
+      PG_PORT: 5432
+
+      AMQP_USER: ${AMQP_USER}
+      AMQP_PASS: ${AMQP_PASS}
+      AMQP_HOST: rmq
+      AMQP_PORT: 5672
+
+      JAEGER_ENDPOINT: http://jaeger:4317
+
+      HTTP_PORT: 80
+    depends_on:
+      - rmq
+      - producer-pg
+    ports:
+      - ${PRODUCER_HTTP_PORT}:80
+  producer-pg:
+    image: postgres:17.4-alpine3.21
+    container_name: workmate-producer-pg
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${PRODUCER_PG_NAME}
+      POSTGRES_USER: ${PRODUCER_PG_USER}
+      POSTGRES_PASSWORD: ${PRODUCER_PG_PASS}
+    volumes:
+      - workmate-processor-local-pg-data:/var/lib/postgresql/data
+
 volumes:
   workmate-rmq-data:
+  workmate-producer-local-pg-data:
+  workmate-processor-local-pg-data:

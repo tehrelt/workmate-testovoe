@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tracer"
+	"github.com/tehrelt/workmate-testovoe/task-processor/internal/lib/tracer"
 	"go.opentelemetry.io/otel"
 )
 

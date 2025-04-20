@@ -50,6 +50,7 @@ func (s *Service) ProcessTask(ctx context.Context, in *models.ProcessTask) (err 
 		}
 	}()
 
+	log.Info("saving event", slog.Any("in", in))
 	if err := s.eventSaver.Save(ctx, in.EventId); err != nil {
 		return err
 	}

@@ -33,6 +33,7 @@ func (c *Consumer) handleNewTasks(ctx context.Context, msg amqp091.Delivery) (er
 
 	payload := msg.Body
 
+	log.Info("incoming tasks.new event")
 	event := &models.CreatedTaskEvent{}
 	if err := json.Unmarshal(payload, event); err != nil {
 		return err
@@ -48,6 +49,7 @@ func (c *Consumer) handleNewTasks(ctx context.Context, msg amqp091.Delivery) (er
 
 		return err
 	}
+	log.Info("", args ...any)
 
 	taskId, err := uuid.Parse(event.TaskId)
 	if err != nil {
