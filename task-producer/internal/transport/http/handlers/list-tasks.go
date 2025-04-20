@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tracer"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/models"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/services/taskservice"
+	"go.opentelemetry.io/otel"
 )
 
 type ListTasksRequest struct {
@@ -61,6 +63,8 @@ func ListTasks(ts *taskservice.TaskService) echo.HandlerFunc {
 			return err
 		}
 
+		_, span := otel.Tracer(tracer.TracerKey).Start(c.Request().Context(), "building a response")
+		defer span.End()
 		var tasks []task
 		for t := range taskch {
 			tasks = append(tasks, task{

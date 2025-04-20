@@ -31,6 +31,7 @@ func (c *Consumer) Run(ctx context.Context) error {
 		go func() {
 			if err := c.manager.Consume(ctx, c.cfg.RoutingKey, c.handleNewTasks); err != nil {
 				slog.Error("failed to consume messages", sl.Err(err))
+				slog.Debug("restaring worker")
 			}
 		}()
 	}

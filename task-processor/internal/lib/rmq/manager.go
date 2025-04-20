@@ -7,6 +7,7 @@ import (
 
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/tehrelt/workmate-testovoe/task-processor/internal/lib/tracer"
+	"github.com/tehrelt/workmate-testovoe/task-processor/pkg/sl"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
@@ -49,7 +50,7 @@ func (r *Manager) Consume(ctx context.Context, rk string, fn ConsumeFn) error {
 
 		slog.Debug("consuming message", slog.Any("headers", msg.Headers))
 		if err := fn(ctx, msg); err != nil {
-			return err
+			slog.Error("failed to consume message", sl.Err(err))
 		}
 
 		span.End()

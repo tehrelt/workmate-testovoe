@@ -22,8 +22,8 @@ type ProcessedTaskEvent struct {
 }
 
 type CreatedTaskEvent struct {
-	EventId   string    `json:"eventId"`
-	TaskId    string    `json:"taskId"`
+	EventId   string    `json:"eventId" validate:"required"`
+	TaskId    string    `json:"taskId" validate:"required"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
