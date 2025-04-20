@@ -49,7 +49,6 @@ func (c *Consumer) handleNewTasks(ctx context.Context, msg amqp091.Delivery) (er
 
 		return err
 	}
-	log.Info("", args ...any)
 
 	taskId, err := uuid.Parse(event.TaskId)
 	if err != nil {
