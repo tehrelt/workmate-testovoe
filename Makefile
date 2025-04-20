@@ -4,11 +4,14 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-build:
+build: gen
 	go build -o ./bin/app.exe ./cmd/app
 
-run: build
-	./bin/app -local
+run: gen
+	go run ./cmd/app/main.go -env .env
+
+gen:
+	wire ./internal/app
 
 migrate.up:
 	migrate -path ./migrations -database 'postgres://$(PG_USER):$(PG_PASS)@$(PG_HOST):$(PG_PORT)/$(PG_NAME)?sslmode=disable' up

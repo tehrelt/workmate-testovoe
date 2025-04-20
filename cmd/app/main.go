@@ -7,13 +7,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/tehrelt/workmate-testovoe/internal/config"
-	"github.com/tehrelt/workmate-testovoe/internal/lib/tracer"
-	"github.com/tehrelt/workmate-testovoe/internal/services/taskservice"
-	"github.com/tehrelt/workmate-testovoe/internal/storage/pg"
-	"github.com/tehrelt/workmate-testovoe/internal/storage/pg/taskstorage"
-	"github.com/tehrelt/workmate-testovoe/internal/storage/rmq/taskqueue"
-	"github.com/tehrelt/workmate-testovoe/internal/transport/http"
+	"github.com/tehrelt/workmate-testovoe/internal/app"
 	"github.com/tehrelt/workmate-testovoe/pkg/sl"
 )
 
@@ -36,23 +30,15 @@ func main() {
 	}
 
 	ctx := context.Background()
-	cfg := config.New()
-	pool, closePool, err := pg.New(ctx, cfg)
+
+	instance, cleanup, err := app.New(ctx)
 	if err != nil {
-		slog.Error("failed to create postgres pool", sl.Err(err))
+		slog.Error("failed to create app instance", sl.Err(err))
 		os.Exit(-1)
 	}
-	defer closePool()
+	defer cleanup()
 
-	taskStorage := taskstorage.New(pool)
-	taskqueue := taskqueue.New()
-
-	taskService := taskservice.New(taskStorage, taskStorage, taskqueue)
-
-	tracer.SetupTracer(ctx, cfg.JaegerEndpoint, cfg.Name)
-	server := http.New(cfg, taskService)
-
-	if err := server.Run(ctx); err != nil {
+	if err := instance.Run(ctx); err != nil {
 		panic(err)
 	}
 }
