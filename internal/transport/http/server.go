@@ -10,12 +10,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-playground/locales/en"
+	"github.com/go-playground/locales/ru"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/tehrelt/workmate-testovoe/internal/config"
 	"github.com/tehrelt/workmate-testovoe/internal/services/taskservice"
 	"github.com/tehrelt/workmate-testovoe/internal/transport/http/handlers"
 	"github.com/tehrelt/workmate-testovoe/internal/transport/http/middlewares"
 	"github.com/tehrelt/workmate-testovoe/pkg/sl"
+
+	ut "github.com/go-playground/universal-translator"
 )
 
 type Server struct {
@@ -36,6 +41,21 @@ func New(cfg *config.Config, ts *taskservice.TaskService) *Server {
 }
 
 func (s *Server) setup() *Server {
+
+	v := validator.New()
+	uni := ut.New(en.New(), ru.New(), en.New())
+
+	translator, _ := uni.GetTranslator("en")
+
+	v.RegisterTranslation("required", translator, func(ut ut.Translator) error {
+		return ut.Add("required", "{0} must have a value!", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("required", fe.Field())
+
+		return t
+	})
+
+	s.router.Validator = newHttpValidator(v, translator)
 
 	s.router.Use(middlewares.Tracing(s.cfg.Name))
 	s.router.Use(middlewares.Logging)

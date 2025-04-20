@@ -15,6 +15,7 @@ func Logging(next echo.HandlerFunc) echo.HandlerFunc {
 			duration := time.Since(start)
 			if err != nil {
 				slog.Error("request failed", sl.Err(err))
+				return
 			}
 			slog.Info(
 				"request",
