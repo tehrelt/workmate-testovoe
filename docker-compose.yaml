@@ -1,0 +1,21 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: workmate-jaeger
+    ports:
+      - "14268:14268"
+      - "14269:14269"
+      - "16686:16686"
+      - "4317:4317"
+
+  rmq:
+    container_name: workmate-rabbitmq
+    image: rabbitmq:3-management
+    volumes:
+      - workmate-rmq-data:/data
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+volumes:
+  workmate-rmq-data:
