@@ -23,7 +23,6 @@ func CreateTask(ts *taskservice.TaskService) echo.HandlerFunc {
 		}
 		if err := c.Validate(&req); err != nil {
 			return err
-			// return echo.NewHTTPError(500, fmt.Sprintf("unexprectedf error of type %t", err))
 		}
 
 		task, err := ts.CreateTask(c.Request().Context(), &models.CreateTask{

@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 func Tracing(serviceName string) echo.MiddlewareFunc {
@@ -34,6 +35,7 @@ func Tracing(serviceName string) echo.MiddlewareFunc {
 			defer func() {
 				if err != nil {
 					span.RecordError(err)
+					span.SetStatus(codes.Error, err.Error())
 				}
 			}()
 
