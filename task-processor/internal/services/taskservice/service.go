@@ -8,7 +8,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/tehrelt/workmate-testovoe/task-processor/internal/lib/tracer"
+	"github.com/tehrelt/workmate-testovoe/task-processor/internal/lib/tx"
 	"github.com/tehrelt/workmate-testovoe/task-processor/internal/models"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -33,11 +35,20 @@ func New(eventSaver EventSaver, taskNotifier TaskNotifier) *Service {
 	}
 }
 
-func (s *Service) ProcessTask(ctx context.Context, in *models.ProcessTask) error {
+func (s *Service) ProcessTask(ctx context.Context, in *models.ProcessTask) (err error) {
 	fn := "taskservice.ProcessTask"
 	log := slog.With(slog.String("fn", fn))
 	ctx, span := otel.Tracer(tracer.TracerKey).Start(ctx, fn)
 	defer span.End()
+
+	ctx, tx := tx.Begin(ctx)
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		} else {
+			err = tx.Commit(ctx)
+		}
+	}()
 
 	if err := s.eventSaver.Save(ctx, in.EventId); err != nil {
 		return err

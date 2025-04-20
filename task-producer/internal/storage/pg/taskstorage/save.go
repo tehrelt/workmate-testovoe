@@ -6,6 +6,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tracer"
+	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tx"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/models"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/storage/pg"
 	"github.com/tehrelt/workmate-testovoe/task-producer/pkg/sl"
@@ -20,6 +21,12 @@ func (ts *TaskStorage) Save(ctx context.Context, in *models.CreateTask) (*models
 		Start(ctx, fn)
 	defer span.End()
 
+	ctx, tx, err := tx.GetOrDefault(ctx, ts.pool)
+	if err != nil {
+		log.Error("failed to get transaction", sl.Err(err))
+		return nil, err
+	}
+
 	query, args, err := sq.
 		Insert(pg.TaskTable).
 		Columns("title").
@@ -32,7 +39,7 @@ func (ts *TaskStorage) Save(ctx context.Context, in *models.CreateTask) (*models
 		return nil, err
 	}
 
-	row := ts.pool.QueryRow(ctx, query, args...)
+	row := tx.QueryRow(ctx, query, args...)
 	task := &task{}
 	if err := row.Scan(
 		&task.id,
@@ -50,6 +57,8 @@ func (ts *TaskStorage) Save(ctx context.Context, in *models.CreateTask) (*models
 		log.Error("failed to convert task to model", sl.Err(err))
 		return nil, err
 	}
+
+	log.Debug("task saved", slog.Any("task", ret))
 
 	return ret, nil
 }
