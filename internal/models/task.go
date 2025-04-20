@@ -8,6 +8,10 @@ import (
 
 type TaskStatus string
 
+func (ts TaskStatus) String() string {
+	return string(ts)
+}
+
 const (
 	StatusError     TaskStatus = "error"
 	StatusPending   TaskStatus = "pending"
