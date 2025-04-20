@@ -28,7 +28,7 @@ type EventSaver interface {
 
 //go:generate go run github.com/vektra/mockery/v2 --name=TaskProcessor
 type TaskProcessor interface {
-	Push(ctx context.Context, task *models.Task) error
+	Push(ctx context.Context, task *models.CreatedTaskEvent) error
 }
 
 type TaskService struct {
@@ -61,8 +61,13 @@ func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (*
 		return nil, err
 	}
 
+	event := &models.CreatedTaskEvent{
+		TaskId:  task.Id.String(),
+		EventId: uuid.NewString(),
+	}
+
 	// TODO transaction manager
-	if err := ts.taskProcessor.Push(ctx, task); err != nil {
+	if err := ts.taskProcessor.Push(ctx, event); err != nil {
 		slog.Error("failed to push task", sl.Err(err))
 		return nil, err
 	}

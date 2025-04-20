@@ -35,17 +35,18 @@ func New(ctx context.Context) (*App, func(), error) {
 		return nil, nil, err
 	}
 	taskStorage := taskstorage.New(pool)
-	taskQueue := taskqueue.New()
+	channel, cleanup2, err := _amqp(configConfig)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	taskQueue := _newTasksProducer(configConfig, channel)
 	storage := eventstorage.New(pool)
 	taskService := taskservice.New(taskStorage, taskStorage, taskQueue, storage)
 	server := http.New(configConfig, taskService)
 	tracer, err := _tracer(ctx, configConfig)
 	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
-	channel, cleanup2, err := _amqp(configConfig)
-	if err != nil {
+		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
@@ -61,6 +62,10 @@ func New(ctx context.Context) (*App, func(), error) {
 
 func _consumer(cfg *config.Config, ch *amqp091.Channel, ts *taskservice.TaskService) *amqp.Consumer {
 	return amqp.New(ch, cfg.Queues.ProcessedTasks, ts)
+}
+
+func _newTasksProducer(cfg *config.Config, ch *amqp091.Channel) *taskqueue.TaskQueue {
+	return taskqueue.New(cfg.Queues.NewTasks, ch)
 }
 
 func _tracer(ctx context.Context, cfg *config.Config) (trace.Tracer, error) {

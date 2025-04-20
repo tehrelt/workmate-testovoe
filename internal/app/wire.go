@@ -41,7 +41,7 @@ func New(ctx context.Context) (*App, func(), error) {
 
 			eventstorage.New,
 			taskstorage.New,
-			taskqueue.New,
+			_newTasksProducer,
 
 			_amqp,
 			_pg,
@@ -53,6 +53,10 @@ func New(ctx context.Context) (*App, func(), error) {
 
 func _consumer(cfg *config.Config, ch *amqp091.Channel, ts *taskservice.TaskService) *amqp.Consumer {
 	return amqp.New(ch, cfg.Queues.ProcessedTasks, ts)
+}
+
+func _newTasksProducer(cfg *config.Config, ch *amqp091.Channel) *taskqueue.TaskQueue {
+	return taskqueue.New(cfg.Queues.NewTasks, ch)
 }
 
 func _tracer(ctx context.Context, cfg *config.Config) (trace.Tracer, error) {

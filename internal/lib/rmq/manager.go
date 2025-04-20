@@ -8,6 +8,7 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/tehrelt/workmate-testovoe/internal/lib/tracer"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 )
 
@@ -21,6 +22,10 @@ func New(ch *amqp091.Channel) *Manager {
 	return &Manager{
 		ch: ch,
 	}
+}
+
+func (r *Manager) Close() error {
+	return r.ch.Close()
 }
 
 func (r *Manager) Consume(ctx context.Context, rk string, fn ConsumeFn) error {
@@ -56,8 +61,13 @@ func (r *Manager) Consume(ctx context.Context, rk string, fn ConsumeFn) error {
 func (r *Manager) Publish(ctx context.Context, exchange, rk string, msg []byte) error {
 
 	t := otel.Tracer(tracer.TracerKey)
-	ctx, span := t.Start(ctx, fmt.Sprintf("Publish %s", rk))
+	ctx, span := t.Start(ctx, fmt.Sprintf("Publish %s.%s", exchange, rk))
 	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("amqp.exchange", exchange),
+		attribute.String("amqp.routing_key", rk),
+	)
 
 	headers := make(amqp091.Table)
 

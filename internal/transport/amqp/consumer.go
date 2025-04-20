@@ -6,7 +6,7 @@ import (
 
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/tehrelt/workmate-testovoe/internal/config"
-	"github.com/tehrelt/workmate-testovoe/internal/lib/tracer/rmq"
+	"github.com/tehrelt/workmate-testovoe/internal/lib/rmq"
 	"github.com/tehrelt/workmate-testovoe/internal/services/taskservice"
 	"github.com/tehrelt/workmate-testovoe/pkg/sl"
 )
@@ -33,6 +33,7 @@ func (c *Consumer) Run(ctx context.Context) error {
 		for {
 			select {
 			case <-ctx.Done():
+				c.manager.Close()
 				return
 			default:
 				if err := c.manager.Consume(ctx, c.cfg.RoutingKey, c.handleProcessedMessage); err != nil {
