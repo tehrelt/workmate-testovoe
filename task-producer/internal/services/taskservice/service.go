@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tx"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/models"
 	"github.com/tehrelt/workmate-testovoe/task-producer/pkg/sl"
 )
@@ -54,8 +55,24 @@ func New(
 	}
 }
 
-func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (*models.Task, error) {
+func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (ta *models.Task, err error) {
 	slog.Debug("saving task", slog.Any("in", in))
+
+	ctx, tx := tx.Begin(ctx, tx.WithSpanName("create task transaction"))
+
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+			return
+		}
+
+		err = tx.Commit(ctx)
+		if err != nil {
+			slog.Error("failed to commit transaction", sl.Err(err))
+			return
+		}
+	}()
+
 	task, err := ts.taskSaver.Save(ctx, in)
 	if err != nil {
 		slog.Error("failed to save task", sl.Err(err))
@@ -67,7 +84,6 @@ func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (*
 		EventId: uuid.NewString(),
 	}
 
-	// TODO transaction manager
 	slog.Info("pushing task to queue", slog.Any("event", event))
 	if err := ts.taskProcessor.Push(ctx, event); err != nil {
 		slog.Error("failed to push task", sl.Err(err))
@@ -103,12 +119,20 @@ func (ts *TaskService) Task(ctx context.Context, id uuid.UUID) (*models.Task, er
 	return task, nil
 }
 
-func (ts *TaskService) UpdateTask(ctx context.Context, in *models.UpdateTask) error {
+func (ts *TaskService) UpdateTask(ctx context.Context, in *models.UpdateTask) (err error) {
 
-	// TODO transaction manager
+	ctx, tx := tx.Begin(ctx, tx.WithSpanName("update task transaction"))
+
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback(ctx)
+		}
+
+		err = tx.Commit(ctx)
+	}()
+
 	slog.Info("saving event", slog.String("eventId", in.EventId.String()))
-	err := ts.eventSaver.Save(ctx, in.EventId)
-	if err != nil {
+	if err := ts.eventSaver.Save(ctx, in.EventId); err != nil {
 		return err
 	}
 

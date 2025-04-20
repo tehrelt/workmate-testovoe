@@ -7,6 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tracer"
+	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tx"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/models"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/storage/pg"
 	"github.com/tehrelt/workmate-testovoe/task-producer/pkg/sl"
@@ -21,6 +22,12 @@ func (ts *TaskStorage) Update(ctx context.Context, in *models.UpdateTask) error 
 		Start(ctx, fn)
 	defer span.End()
 
+	ctx, tx, err := tx.GetOrDefault(ctx, ts.pool)
+	if err != nil {
+		log.Error("failed to get transaction", sl.Err(err))
+		return err
+	}
+
 	query, args, err := sq.
 		Update(pg.TaskTable).
 		Set("status", in.NewStatus).
@@ -33,7 +40,7 @@ func (ts *TaskStorage) Update(ctx context.Context, in *models.UpdateTask) error 
 		return err
 	}
 
-	if _, err := ts.pool.Exec(ctx, query, args...); err != nil {
+	if _, err := tx.Exec(ctx, query, args...); err != nil {
 		log.Error("failed to update task", sl.Err(err))
 		return err
 	}

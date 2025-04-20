@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgconn"
 	"github.com/tehrelt/workmate-testovoe/task-processor/internal/lib/tracer"
+	"github.com/tehrelt/workmate-testovoe/task-processor/internal/lib/tx"
 	"github.com/tehrelt/workmate-testovoe/task-processor/internal/storage"
 	"github.com/tehrelt/workmate-testovoe/task-processor/internal/storage/pg"
 	"github.com/tehrelt/workmate-testovoe/task-processor/pkg/sl"
@@ -24,6 +25,12 @@ func (ts *Storage) Save(ctx context.Context, id uuid.UUID) error {
 		Start(ctx, fn)
 	defer span.End()
 
+	ctx, tx, err := tx.GetOrDefault(ctx, ts.pool)
+	if err != nil {
+		log.Error("failed to get transaction", sl.Err(err))
+		return err
+	}
+
 	query, args, err := sq.
 		Insert(pg.EventTable).
 		Columns("id").
@@ -35,7 +42,7 @@ func (ts *Storage) Save(ctx context.Context, id uuid.UUID) error {
 		return err
 	}
 
-	if _, err := ts.pool.Exec(ctx, query, args...); err != nil {
+	if _, err := tx.Exec(ctx, query, args...); err != nil {
 		log.Error("error ocurred", slog.String("type", fmt.Sprintf("%t", err)))
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
