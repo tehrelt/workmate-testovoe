@@ -29,19 +29,15 @@ func New(ch *amqp091.Channel, cfg config.QueueConfig, ts *taskservice.TaskServic
 }
 
 func (c *Consumer) Run(ctx context.Context) error {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				c.manager.Close()
-				return
-			default:
-				if err := c.manager.Consume(ctx, c.cfg.RoutingKey, c.handleProcessedMessage); err != nil {
-					slog.Error("failed to consume messages", sl.Err(err))
-				}
+
+	slog.Info("starting up consumers", slog.Any("config", c.cfg))
+	for range c.cfg.PoolConfig.MaxWorkers {
+		go func() {
+			if err := c.manager.Consume(ctx, c.cfg.RoutingKey, c.handleProcessedMessage); err != nil {
+				slog.Error("failed to consume messages", sl.Err(err))
 			}
-		}
-	}()
+		}()
+	}
 
 	<-ctx.Done()
 	return ctx.Err()

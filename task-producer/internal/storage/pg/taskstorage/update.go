@@ -3,6 +3,7 @@ package taskstorage
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/lib/tracer"
@@ -23,6 +24,7 @@ func (ts *TaskStorage) Update(ctx context.Context, in *models.UpdateTask) error 
 	query, args, err := sq.
 		Update(pg.TaskTable).
 		Set("status", in.NewStatus).
+		Set("updated_at", time.Now()).
 		Where(sq.Eq{"id": in.Id}).
 		PlaceholderFormat(sq.Dollar).
 		ToSql()

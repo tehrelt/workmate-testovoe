@@ -9,10 +9,11 @@ services:
       POSTGRES_USER: ${PG_USER}
       POSTGRES_PASSWORD: ${PG_PASS}
     volumes:
-      - workmate-producer-local-pg-data:/var/lib/postgresql/data
+      - workmate-processor-local-pg-data:/var/lib/postgresql/data
     ports:
       - ${PG_PORT}:5432
 
 volumes:
-  workmate-producer-local-pg-data:
-    name: workmate-producer-local-pg
+  workmate-processor-local-pg-data:
+    name: workmate-processor-local-pg
+  workmate-rmq-data:

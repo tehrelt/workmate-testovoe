@@ -68,6 +68,7 @@ func (ts *TaskService) CreateTask(ctx context.Context, in *models.CreateTask) (*
 	}
 
 	// TODO transaction manager
+	slog.Info("pushing task to queue", slog.Any("event", event))
 	if err := ts.taskProcessor.Push(ctx, event); err != nil {
 		slog.Error("failed to push task", sl.Err(err))
 		return nil, err

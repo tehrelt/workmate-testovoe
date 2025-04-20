@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/tehrelt/workmate-testovoe/task-producer/pkg/sl"
+	"github.com/tehrelt/workmate-testovoe/task-processor/pkg/sl"
 )
 
 type Env string
@@ -18,26 +18,16 @@ const (
 )
 
 type Config struct {
-	Env            Env          `env:"ENV" env-default:"local"`
-	Name           string       `env:"APP_NAME" env-default:"workmate-testovoe"`
-	Version        string       `env:"VERSION" env-default:"v0.1.0"`
-	JaegerEndpoint string       `env:"JAEGER_ENDPOINT" env-default:"localhost:6831"`
-	Http           ServerConfig `env-prefix:"HTTP_" env-default:"localhost:8080"`
-	PG             Database     `env-prefix:"PG_" env-default:"postgresql:localhost:5432:postgres:postgres:workmate"`
-	Amqp           AmqpConfig   `env-prefix:"AMQP_" env-default:"localhost:5672:guest:guest:/"`
+	Env            Env        `env:"ENV" env-default:"local"`
+	Name           string     `env:"APP_NAME" env-default:"workmate-testovoe"`
+	Version        string     `env:"VERSION" env-default:"v0.1.0"`
+	JaegerEndpoint string     `env:"JAEGER_ENDPOINT" env-default:"localhost:6831"`
+	Amqp           AmqpConfig `env-prefix:"AMQP_" env-default:"localhost:5672:guest:guest:/"`
+	PG             Database   `env-prefix:"PG_"`
 	Queues         struct {
 		NewTasks       QueueConfig `env-prefix:"NEW_TASKS_"`
 		ProcessedTasks QueueConfig `env-prefix:"PROCESSED_TASKS_"`
 	} `env-prefix:"QUEUE_"`
-}
-
-type ServerConfig struct {
-	Host string `env:"HOST"`
-	Port int    `env:"PORT"`
-}
-
-func (s *ServerConfig) Address() string {
-	return fmt.Sprintf("%s:%d", s.Host, s.Port)
 }
 
 type AmqpConfig struct {
@@ -50,12 +40,6 @@ type AmqpConfig struct {
 
 func (a *AmqpConfig) ConnectionString() string {
 	return fmt.Sprintf("amqp://%s:%s@%s:%d/", a.User, a.Password, a.Host, a.Port)
-}
-
-type QueueConfig struct {
-	Exchange   string           `env:"EXCHANGE" env-default:"workmate"`
-	RoutingKey string           `env:"ROUTING_KEY" env-default:"workmate"`
-	PoolConfig WorkerPoolConfig `env-prefix:"POOL_"`
 }
 
 type WorkerPoolConfig struct {
@@ -74,6 +58,12 @@ type Database struct {
 func (d *Database) ConnectionString() string {
 	return fmt.Sprintf("%s://%s:%s@%s:%d/%s?sslmode=disable",
 		d.Protocol, d.User, d.Password, d.Host, d.Port, d.Name)
+}
+
+type QueueConfig struct {
+	Exchange         string           `env:"EXCHANGE" env-default:"workmate"`
+	RoutingKey       string           `env:"ROUTING_KEY" env-default:"workmate"`
+	WorkerPoolConfig WorkerPoolConfig `env-prefix:"POOL_" env-default:""`
 }
 
 func setupLogger(cfg *Config) {
