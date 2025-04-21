@@ -3,7 +3,7 @@
 ## Stack
 - Go 1.24
 - RabbitMQ (amqp091)
-- PostgreSQL (pgxpool)
+- PostgreSQL (pgxpool, migrate)
 - Jaeger (opentelemetry)
 - Prometheus
 - Grafana
