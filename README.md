@@ -17,7 +17,11 @@ docker compose up -d --build
 ```
 
 При успешном запуске приложения API будет доступен на порту 4000
+
 JaegerUI - http://localhost:16686
+
 Prometheus - http://localhost:9090
+
 Grafana - http://localhost:3000
+
 RabbitMQ UI - http://localhost:15672
