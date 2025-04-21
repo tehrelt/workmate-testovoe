@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/ru"
 	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/config"
 	"github.com/tehrelt/workmate-testovoe/task-producer/internal/services/taskservice"
@@ -55,10 +56,12 @@ func (s *Server) setup() *Server {
 
 	s.router.Use(middlewares.Tracing(s.cfg.Name))
 	s.router.Use(middlewares.Logging)
+	s.router.Use(echoprometheus.NewMiddleware(s.cfg.Name))
 
 	s.router.POST("/", handlers.CreateTask(s.taskService))
 	s.router.GET("/", handlers.ListTasks(s.taskService))
 	s.router.GET("/:id", handlers.GetTask(s.taskService))
+	s.router.GET("/metrics", echoprometheus.NewHandler())
 
 	return s
 }

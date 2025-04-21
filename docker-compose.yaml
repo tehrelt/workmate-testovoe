@@ -1,4 +1,24 @@
 services:
+  prometheus:
+    image: prom/prometheus:v3.3.0
+    container_name: workmate-prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - workmate-prometheus-data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  grafana:
+    image: grafana/grafana-enterprise:9.4.7
+    container_name: workmate-grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - "workmate-grafana:/var/lib/grafana"
+      - ./grafana.ini:/usr/local/etc/grafana/grafana.ini
+
   jaeger:
     image: jaegertracing/all-in-one
     container_name: workmate-jaeger
@@ -23,7 +43,10 @@ services:
     env_file:
       - .env
     environment:
-      WAIT_HOSTS: processor-pg:5432
+      WAIT_HOSTS: processor-pg:5432, rmq:5672
+
+      APP_NAME: processor
+
       PG_NAME: ${PROCESSOR_PG_NAME}
       PG_USER: ${PROCESSOR_PG_USER}
       PG_PASS: ${PROCESSOR_PG_PASS}
@@ -62,7 +85,10 @@ services:
       - .env
 
     environment:
-      WAIT_HOSTS: producer-pg:5432
+      WAIT_HOSTS: producer-pg:5432, rmq:5672
+
+      APP_NAME: producer
+
       PG_NAME: ${PRODUCER_PG_NAME}
       PG_USER: ${PRODUCER_PG_USER}
       PG_PASS: ${PRODUCER_PG_PASS}
@@ -97,5 +123,7 @@ services:
 
 volumes:
   workmate-rmq-data:
+  workmate-prometheus-data:
+  workmate-grafana:
   workmate-producer-local-pg-data:
   workmate-processor-local-pg-data:

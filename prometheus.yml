@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: workmate-producer
+    scrape_interval: 5s
+    metrics_path: /metrics
+    scheme: http
+    static_configs:
+      - targets: ["workmate-producer:80"]
